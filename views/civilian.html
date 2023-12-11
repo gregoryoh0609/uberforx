@@ -50,12 +50,12 @@
             }
         }
         mapboxgl.accessToken = 'pk.eyJ1IjoiZ3JlZ29yeW9oMDYwOSIsImEiOiJjbHEwMXp4NjQwMnl2MnFxeDJnajA0OW9tIn0.A90swA0my9B9uNiWFbvJJA';
-            map = new mapboxgl.Map({
+        map = new mapboxgl.Map({
         	container: 'map', // container ID
         	style: 'mapbox://styles/mapbox/streets-v12', // style URL
         	center: [-74.5, 40], // starting position [lng, lat]
         	zoom: 9, // starting zoom
-            });
+        });
             
         let marker = new mapboxgl.Marker()
         .setLngLat([30.5, 50.5])

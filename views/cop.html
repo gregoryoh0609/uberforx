@@ -16,9 +16,7 @@
 <body data-userId="{{ userId }}">
     <h1>Hello Cop {{ userId }}</h1>
     <div id="copDetails">
-        
-
-
+    
     </div>
     <h4 id="notification">
         Waiting for Requests...
@@ -28,7 +26,7 @@
     <button onclick="helpCivilian()">
         Help Civilian
     </button>
-    <div id="map">
+    <div id="map" style='width: 400px; height: 300px;'>
         <!-- We will load a map here later-->
     </div>
     <script type="text/javascript">
@@ -43,13 +41,14 @@
         // Declare variables, this will be used later
         let requestDetails = {};
         let copDetails = {};
-        let map, marker;
+        let map;
+
         // First send a GET request using Axios and get the cop's details and save it
         axios.get(`/cops/info?userId=${userId}`)
             .then( (response) => {
                 copDetails = response.data.copDetails;
                 copDetails.location = {
-                            address: copDetails.location.address,
+                    address: copDetails.location.address,
                     longitude: copDetails.location.coordinates[0],
                     latitude: copDetails.location.coordinates[1]
                 };
@@ -59,10 +58,31 @@
                     , Lng: ${copDetails.location.longitude}
                     , Lat: ${copDetails.location.latitude}
                     `;
+                mapboxgl.accessToken = 'pk.eyJ1IjoiZ3JlZ29yeW9oMDYwOSIsImEiOiJjbHEwMXp4NjQwMnl2MnFxeDJnajA0OW9tIn0.A90swA0my9B9uNiWFbvJJA';
+                map = new mapboxgl.Map({
+                    container: 'map', // container ID
+                    style: 'mapbox://styles/mapbox/streets-v12', // style URL
+                    center: [-79.4853, 43.66807], // starting position [lng, lat]
+                    zoom: 9, // starting zoom
+                });
+                    
+                let marker = new mapboxgl.Marker()
+                .setLngLat([copDetails.location.longitude, copDetails.location.latitude])
+                .addTo(map);
+                map.addControl(
+                    new MapboxGeocoder({
+                        accessToken: mapboxgl.accessToken,
+                        mapboxgl: mapboxgl
+                    }).on('result',(datatemp) => {
+                        console.log(datatemp);  
+                        marker.setLngLat([datatemp.result.geometry.coordinates[0], datatemp.result.geometry.coordinates[1]]); // Set the marker to new location
+                    }) 
+                );
             })
             .catch((error) => {
                 console.log(error);
             });
+    
     
     // Listen for a "request-for-help" event
     socket.on("request-for-help", (eventData) => { // This function runs once a request-for-help event is received
@@ -72,6 +92,16 @@
         document.getElementById("notification").innerHTML =
         `Civilian ${requestDetails.civilianId} is being attacked by a wildling and needs help!
         They're at ${requestDetails.location.address}`;
+        var el = document.createElement('div');
+        el.className = 'marker';
+        el.style.backgroundImage = 'url(/images/civilianresize.png)';
+        el.style.width = '50px';
+        el.style.height = '50px';
+        el.style.borderRadius = '50%';
+            
+        new mapboxgl.Marker(el)
+        .setLngLat([requestDetails.location.longitude, requestDetails.location.latitude])
+        .addTo(map);
     });
         function helpCivilian() {
             //Fire a "request-accepted" event/signal and send relevant info back to server
