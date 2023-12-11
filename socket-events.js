@@ -34,15 +34,15 @@ function initialize(server) {
                 ],
                 address: eventData.location.address
             };
-
             await dbOperations.saveRequest(requestId, requestTime, location, eventData.civilianId, 'waiting');
 
             // 2. AFTER saving, fetch nearby cops from civilian’s location
-            const nearestCops = await dbOperations.fetchNearestCops(location.coordinates, 2000);
+            const nearestCops = await dbOperations.fetchNearestCops(location.coordinates, 100000);
             eventData.requestId = requestId;
 
             // 3. After fetching nearest cops, fire a 'request-for-help' event to each of them
             for (let i = 0; i < nearestCops.length; i++) {
+                console.log('HELLO????')
                 io.sockets.in(nearestCops[i].userId).emit('request-for-help', eventData);
             }
         });

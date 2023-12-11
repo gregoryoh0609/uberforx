@@ -9,7 +9,7 @@ router.get('/cops', async (req, res) => {
     */
     const latitude = Number(req.query.lat);
     const longitude = Number(req.query.lng);
-    const nearestCops = await dbOperations.fetchNearestCops([longitude, latitude], 2000);
+    const nearestCops = await dbOperations.fetchNearestCops([longitude, latitude], 6000);
 
     res.json({
         cops: nearestCops

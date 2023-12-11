@@ -3,26 +3,31 @@
 <head>
 <!-- Load socket.io client library -->
 <script src="/socket.io/socket.io.js"></script>
-
+<!-- loading mapbox api and css style sheet-->
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
 <!-- Load Axios from a CDN -->
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-
-
     <meta charset="utf-8"/>
     <title>Cop {{ userId }} </title>
 </head>
 <body data-userId="{{ userId }}">
     <h1>Hello Cop {{ userId }}</h1>
+    <div id="copDetails">
+        
+
+
+    </div>
+    <h4 id="notification">
+        Waiting for Requests...
+        <!-- Some info will be displayed here-->
+    </h4>
+
     <button onclick="helpCivilian()">
         Help Civilian
     </button>
-    
-    <h4 id="notification">
-        <!-- Some info will be displayed here-->
-    </h4>
-    <div id="copDetails">
-        
-    </div>
     <div id="map">
         <!-- We will load a map here later-->
     </div>
@@ -44,34 +49,38 @@
             .then( (response) => {
                 copDetails = response.data.copDetails;
                 copDetails.location = {
-                    address: copDetails.location.address,
+                            address: copDetails.location.address,
                     longitude: copDetails.location.coordinates[0],
                     latitude: copDetails.location.coordinates[1]
                 };
                 document.getElementById("copDetails").innerHTML =
                     `Display Name: ${copDetails.displayName}
-                    Address: ${copDetails.location.address}
+                    , Address: ${copDetails.location.address}
+                    , Lng: ${copDetails.location.longitude}
+                    , Lat: ${copDetails.location.latitude}
                     `;
             })
             .catch((error) => {
                 console.log(error);
             });
-
-// Listen for a "request-for-help" event
-        socket.on("request-for-help", (eventData) => { // This function runs once a request-for-help event is received
-            requestDetails = eventData; // Contains info of civilian
-
-// display civilian info
-            document.getElementById("notification").innerHTML =
-            `Civilian ${requestDetails.civilianId} is being attacked by a wildling and needs help!
-            They're at ${requestDetails.location.address}`;
-        });
+    
+    // Listen for a "request-for-help" event
+    socket.on("request-for-help", (eventData) => { // This function runs once a request-for-help event is received
+        requestDetails = eventData; // Contains info of civilian
+    
+        // display civilian info
+        document.getElementById("notification").innerHTML =
+        `Civilian ${requestDetails.civilianId} is being attacked by a wildling and needs help!
+        They're at ${requestDetails.location.address}`;
+    });
         function helpCivilian() {
             //Fire a "request-accepted" event/signal and send relevant info back to server
             socket.emit("request-accepted", {
                 requestDetails: requestDetails,
-                copDetails: copDetails
+                copDetails: copDetails,
             });
+            document.getElementById("notification").innerHTML =
+            `Civilian Information: ID = ${requestDetails.civilianId}, Location = ${requestDetails.location.address}`;
         }
         
 

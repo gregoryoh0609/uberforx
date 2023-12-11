@@ -3,23 +3,28 @@
 <head>
 <!-- Load socket.io client library -->
 <script src="/socket.io/socket.io.js"></script>
+<!-- loading mapbox libraries and stylesheets-->
+<script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+<link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
 
 <!-- Load Axios from a CDN -->
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
     <meta charset="utf-8"/>
     <title>Civilian {{ userId }} </title>
 </head>
 <body data-userId="{{ userId }}">
     <h1>Hello Civilian {{ userId }}</h1>
-    <button onclick="requestForHelp()">
-        Request for help
-    </button>
     
     <h4 id="notification">
         <!-- Some info will be displayed here-->
     </h4>
-
-    <div id="map">
+    <button onclick="requestForHelp()">
+        Request for help
+    </button>
+    <div id="map" style='width: 400px; height: 300px;'>
         <!-- We will load a map here later-->
     </div>
     <script type="text/javascript">
@@ -34,7 +39,7 @@
         // Declare variables, this will be used later
         let requestDetails = {};
         let copDetails = {};
-        let map, marker;
+        let map;
         // civilian's info
         requestDetails = {
             civilianId: userId,
@@ -44,6 +49,33 @@
                 longitude: 77.64115449999997
             }
         }
+        mapboxgl.accessToken = 'pk.eyJ1IjoiZ3JlZ29yeW9oMDYwOSIsImEiOiJjbHEwMXp4NjQwMnl2MnFxeDJnajA0OW9tIn0.A90swA0my9B9uNiWFbvJJA';
+            map = new mapboxgl.Map({
+        	container: 'map', // container ID
+        	style: 'mapbox://styles/mapbox/streets-v12', // style URL
+        	center: [-74.5, 40], // starting position [lng, lat]
+        	zoom: 9, // starting zoom
+            });
+            
+        let marker = new mapboxgl.Marker()
+        .setLngLat([30.5, 50.5])
+        .addTo(map);
+        map.addControl(
+            new MapboxGeocoder({
+                accessToken: mapboxgl.accessToken,
+                mapboxgl: mapboxgl
+            }).on('result',(datatemp) => {
+                console.log(requestDetails);  
+                requestDetails.location = {
+                    address: datatemp.result.place_name,
+                    latitude: datatemp.result.geometry.coordinates[1],
+                    longitude: datatemp.result.geometry.coordinates[0]
+                };
+                marker.setLngLat([datatemp.result.geometry.coordinates[0], datatemp.result.geometry.coordinates[1]]); // Set the marker to new location
+            }) 
+        );
+    
+
 
         // Listen for a "request-accepted" event
         socket.on("request-accepted", function(eventData){
@@ -52,12 +84,25 @@
             document.getElementById("notification").innerHTML =
         `       ${copDetails.displayName} is near ${copDetails.location.address} and will be arriving at your location shortly.
                 You can reach them at their mobile ${copDetails.phone}`;
+            var el = document.createElement('div');
+            el.className = 'marker';
+            el.style.backgroundImage = 'url(/images/copresize.png)';
+            el.style.width = '65px';
+            el.style.height = '31px';
+            el.style.borderRadius = '50%';
+                
+            new mapboxgl.Marker(el)
+            .setLngLat([copDetails.location.longitude, copDetails.location.latitude])
+            .addTo(map);
+
         });
+        
             
 
 // When button is clicked, fire request-for-help and send civilian's userId and location
         function requestForHelp(){
             socket.emit("request-for-help", requestDetails);
+            document.getElementById("notification").innerHTML = 'Looking for Cop...';
         }
 
     </script>
