@@ -42,7 +42,7 @@ function initialize(server) {
 
             // 3. After fetching nearest cops, fire a 'request-for-help' event to each of them
             for (let i = 0; i < nearestCops.length; i++) {
-                console.log('HELLO????')
+                console.log('THERE IS A COP WITHIN THE VICINITY')
                 io.sockets.in(nearestCops[i].userId).emit('request-for-help', eventData);
             }
         });

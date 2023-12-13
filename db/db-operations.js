@@ -64,3 +64,32 @@ function updateRequest(issueId, copId, status) {
 }
 exports.updateRequest = updateRequest;
 
+function fetchRequests() {
+    return new Promise( (resolve, reject) => {
+        try {
+            const requestsData = [];
+
+            const stream = Request.find({}, {
+                requestTime: 1,
+                status: 1,
+                location: 1,
+                _id: 0
+            }).stream();
+
+            stream.on("data", function (request) {
+                requestsData.push(request);
+            });
+
+            stream.on("end", function () {
+                resolve(requestsData);
+            });
+
+        } catch (err) {
+            console.log(err);
+            reject(err);
+        }
+    });
+}
+exports.fetchRequests = fetchRequests;
+
+

@@ -36,5 +36,38 @@ router.get('/cops/info', async (req, res) => {
         copDetails: copDetails
     });
 });
+//calls function for the data view page 
+router.get('/data.html', (req, res) => {
+    res.render('data.html');
+});
+// gets request info from mongodb
+router.get('/requests/info', async (req, res) => {
+    const results = await dbOperations.fetchRequests();
+    const features = [];
+
+    for (let i = 0; i < results.length; i++) {
+        features.push({
+            type: 'Feature',
+            geometry: {
+                type: 'Point',
+                coordinates: results[i].location.coordinates
+            },
+            properties: {
+                status: results[i].status,
+                requestTime: results[i].requestTime,
+                address: results[i].location.address
+            }
+        });
+    }
+
+    const geoJsonData = {
+        type: 'FeatureCollection',
+        features: features
+    }
+
+    res.json(geoJsonData);
+});
+
+
 
 
